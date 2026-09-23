@@ -34,4 +34,3 @@ print(f"Prompt tokens: {response.usage.prompt_tokens}")
 print(f"Response tokens: {response.usage.completion_tokens}")
 print(f"Total tokens: {response.usage.total_tokens}")
 print(f"Response: {llm_response}")
-
