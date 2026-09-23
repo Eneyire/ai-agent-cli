@@ -26,8 +26,12 @@ response = client.chat.completions.create(
 
 llm_response = response.choices[0].message.content
 
+if response.usage is None:
+    raise RuntimeError("Failed to get usage information from the API")
+
 # Print the number of tokens consumed by the interaction
 print(f"Prompt tokens: {response.usage.prompt_tokens}")
 print(f"Response tokens: {response.usage.completion_tokens}")
 print(f"Total tokens: {response.usage.total_tokens}")
 print(f"Response: {llm_response}")
+
