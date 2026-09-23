@@ -1,7 +1,12 @@
+import argparse
 import os
 
 from dotenv import load_dotenv
 from openai import OpenAI
+
+parser = argparse.ArgumentParser(description="Chatbot")
+parser.add_argument("user_prompt", type=str, help="User prompt")
+args = parser.parse_args()
 
 load_dotenv()
 api_key = os.environ.get("OPENROUTER_API_KEY")
@@ -19,12 +24,12 @@ response = client.chat.completions.create(
     messages=[
         {
             "role": "user",
-            "content": "Tell me something new under the sun. Use one paragraph maximum.",
+            "content": args.user_prompt,
         }
     ],
 )
 
-llm_response = response.choices[0].message.content
+user_prompt = response.choices[0].message.content
 
 if response.usage is None:
     raise RuntimeError("Failed to get usage information from the API")
@@ -33,4 +38,4 @@ if response.usage is None:
 print(f"Prompt tokens: {response.usage.prompt_tokens}")
 print(f"Response tokens: {response.usage.completion_tokens}")
 print(f"Total tokens: {response.usage.total_tokens}")
-print(f"Response: {llm_response}")
+print(f"Response: {user_prompt}")
