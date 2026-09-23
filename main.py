@@ -30,6 +30,4 @@ llm_response = response.choices[0].message.content
 print(f"Prompt tokens: {response.usage.prompt_tokens}")
 print(f"Response tokens: {response.usage.completion_tokens}")
 print(f"Total tokens: {response.usage.total_tokens}")
-
-# Print the LLM response
 print(f"Response: {llm_response}")
