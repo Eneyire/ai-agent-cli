@@ -7,7 +7,10 @@ from openai import OpenAI
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="AI Code Assistant")
-    parser.add_argument("user_prompt", type=str, help="This is the prompt to be sent to the LLM")
+    parser.add_argument(
+        "user_prompt", type=str, help="This is the prompt to be sent to the LLM"
+    )
+    parser.add_argument("--verbose", action="store_true", help="Enable verbose output")
     args = parser.parse_args()
 
     load_dotenv()
@@ -21,27 +24,29 @@ def main() -> None:
         api_key=api_key,
     )
 
-    msgs = [{"role": "user", "content": args.user_prompt}]
+    messages = [
+        {"role": "user", "content": args.user_prompt},
+        {"role": "assistant", "content": "42"},
+        # {"role": "user", "content": args.user_prompt},
+        # {"role": "assistant", "content": "How can I help you today?"},
+    ]
 
     response = client.chat.completions.create(
         model="openrouter/free",
-        messages=msgs,
+        messages=messages,
     )
 
     if response.usage is None:
         raise RuntimeError("Failed to get usage information from the API")
 
-    # def generate_content(client, messages):
-    #     response = client.chat.completions.create(
-    #         model="openrouter/free",
-    #         messages=messages,
-    #     )
-    #     return response.choices[0].message.content
-
-    print(f"Prompt tokens: {response.usage.prompt_tokens}")
-    print(f"Response tokens: {response.usage.completion_tokens}")
-    print(f"Total tokens: {response.usage.total_tokens}")
-    print(f"Response: \n{response.choices[0].message.content}")
+    if args.verbose:
+        print(f"User prompt: {args.user_prompt}")
+        print(f"Prompt tokens: {response.usage.prompt_tokens}")
+        print(f"Response tokens: {response.usage.completion_tokens}")
+        print(f"Total tokens: {response.usage.total_tokens}")
+        print(f"Response: \n{response.choices[0].message.content}")
+    else:
+        print(f"Response: \n{response.choices[0].message.content}")
 
 
 if __name__ == "__main__":
