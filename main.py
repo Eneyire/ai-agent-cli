@@ -7,9 +7,7 @@ from openai import OpenAI
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="AI Code Assistant")
-    parser.add_argument(
-        "user_prompt", type=str, help="This is the prompt to be sent to the LLM"
-    )
+    parser.add_argument("user_prompt", type=str, help="This is the prompt to be sent to the LLM")
     args = parser.parse_args()
 
     load_dotenv()
@@ -23,18 +21,22 @@ def main() -> None:
         api_key=api_key,
     )
 
+    msgs = [{"role": "user", "content": args.user_prompt}]
+
     response = client.chat.completions.create(
         model="openrouter/free",
-        messages=[
-            {
-                "role": "user",
-                "content": args.user_prompt,
-            }
-        ],
+        messages=msgs,
     )
 
     if response.usage is None:
         raise RuntimeError("Failed to get usage information from the API")
+
+    # def generate_content(client, messages):
+    #     response = client.chat.completions.create(
+    #         model="openrouter/free",
+    #         messages=messages,
+    #     )
+    #     return response.choices[0].message.content
 
     print(f"Prompt tokens: {response.usage.prompt_tokens}")
     print(f"Response tokens: {response.usage.completion_tokens}")
