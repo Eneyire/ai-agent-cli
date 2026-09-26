@@ -10,10 +10,7 @@ def write_file(working_directory: str, file_path: str, content: str) -> str:
         )
 
         if not valid_target_file_path:
-            return (
-                f'Error: Cannot write to "{file_path}" as it is outside the '
-                "permitted working directory"
-            )
+            return (f'Error: Cannot write to "{file_path}" as it is outside the permitted working directory')
 
         if os.path.isdir(target_file_path):
             return f'Error: Cannot write to "{file_path}" as it is a directory'
