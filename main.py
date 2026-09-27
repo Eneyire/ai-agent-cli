@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 from openai import OpenAI
 
+from functions.call_function import available_functions
 from prompts import system_prompt
 
 
@@ -35,6 +36,7 @@ def main() -> None:
         model="openrouter/free",
         messages=messages,
         temperature=0,
+        tools=available_functions,
     )
 
     if response.usage is None:
