@@ -1,21 +1,27 @@
 # AI Agent CLI
 
-A small Python command-line project containing:
+A Python command-line AI agent that can inspect and modify files within a configured project workspace, run Python programs, and return a user-facing response. The repository also includes a calculator application used to demonstrate local code execution and agent-driven debugging.
 
-- an experimental AI assistant that sends prompts to an OpenRouter model; and
-- a standalone calculator application that evaluates basic arithmetic expressions.
+The project highlights practical agent engineering patterns: model-driven tool selection, structured tool schemas, iterative tool execution, conversation history management, bounded agent turns, and focused automated tests.
 
-The project is still under active development. The calculator is currently the most complete local component, while the AI assistant is a minimal proof of concept.
+## Capabilities
+
+- **Tool-calling agent:** Sends a user request and available tool definitions to an OpenRouter model.
+- **Workspace tools:** Lists directories, reads file contents, writes files, and runs Python scripts with optional arguments.
+- **Iterative execution:** Adds assistant and tool results to the conversation and continues until the model returns a final response, with a 20-iteration limit.
+- **Operational visibility:** `--verbose` displays token usage, tool calls, and tool results.
+- **Calculator application:** Evaluates arithmetic expressions with operator precedence and nested parentheses, and renders results as JSON.
+- **Automated tests:** Pytest coverage exercises calculator behavior and the filesystem and subprocess tools using temporary workspaces.
 
 ## Requirements
 
 - Python 3.12 or newer
-- [`uv`](https://docs.astral.sh/uv/) (recommended)
-- An [OpenRouter](https://openrouter.ai/) API key for the AI assistant
+- [`uv`](https://docs.astral.sh/uv/)
+- An [OpenRouter](https://openrouter.ai/) API key to run the agent
 
 ## Setup
 
-Install the project dependencies with `uv`:
+Install the project and development dependencies:
 
 ```bash
 uv sync
@@ -27,79 +33,78 @@ Create a `.env` file in the project root and add your OpenRouter API key:
 OPENROUTER_API_KEY=your-api-key
 ```
 
-The `.env` file is ignored by Git and is loaded automatically when the AI assistant starts.
+The CLI loads this variable from `.env` at startup. Keep API keys private and do not commit them.
 
-## AI assistant
+## Run the agent
 
-Run the assistant from the project root with a prompt as the positional argument:
-
-```bash
-uv run python main.py "Explain how this project works"
-```
-
-By default, the command prints the model response. Add `--verbose` to include the prompt and token usage:
+Pass a request as the positional prompt:
 
 ```bash
-uv run python main.py "Suggest a test for the calculator" --verbose
+uv run main.py "Explain how the calculator renders its result"
 ```
 
-The assistant currently uses the `openrouter/free` model through the OpenAI-compatible OpenRouter API. An `OPENROUTER_API_KEY` is required; the command exits with an error if it is not configured.
+Enable verbose output to inspect token usage and tool activity:
+
+```bash
+uv run main.py "List the calculator files and explain the parser" --verbose
+```
+
+The agent uses the OpenAI-compatible OpenRouter API with the `openrouter/free` model. Model availability and tool-calling behavior depend on the selected provider and model. The agent stops after 20 model turns if it has not produced a final response.
+
+## Available tools
+
+| Tool               | Purpose                                                                  |
+| ------------------ | ------------------------------------------------------------------------ |
+| `get_files_info`   | List entries in a directory and report their sizes and directory status. |
+| `get_file_content` | Read a file, with a configurable maximum content length.                 |
+| `write_file`       | Create or overwrite a file.                                              |
+| `run_python_file`  | Run a Python file and capture its output and exit status.                |
+
+The agent supplies `calculator/` as the tools' working directory. Path validation limits the requested target paths to that workspace. **This is not an operating-system sandbox:** Python scripts run as subprocesses with the permissions of the current user, and code inside a script may access resources beyond the selected working directory. Only run the agent in a trusted environment and review code before executing it.
 
 ## Calculator
 
-The calculator accepts space-separated infix expressions and prints the result as formatted JSON:
+Run the calculator from the project root:
 
 ```bash
-cd calculator
-python main.py "3 + 5"
+uv run calculator/main.py "( 3 + 5 ) * 2"
 ```
 
-Output:
+Example output:
 
 ```json
 {
-    "expression": "3 + 5",
-    "result": 8
+    "expression": "( 3 + 5 ) * 2",
+    "result": 16
 }
 ```
 
-Supported operators are:
-
-- `+` addition
-- `-` subtraction
-- `*` multiplication
-- `/` division
-
-Multiplication and division take precedence over addition and subtraction. For example:
-
-```bash
-python main.py "2 * 3 - 8 / 2 + 5"
-```
-
-Expressions use space-separated operators and support nested parentheses (for example, `"( 3 + 5 ) * 2"`). Invalid expressions and arithmetic errors are reported on the command line.
+The calculator supports addition, subtraction, multiplication, division, operator precedence, and nested parentheses. Invalid expressions and arithmetic errors are reported on the command line.
 
 ## Tests
 
-Run the full pytest suite from the project root:
+Run the complete test suite from the project root:
 
 ```bash
 uv run pytest
 ```
 
-Tests live in the root `tests/` directory and use pytest fixtures such as `tmp_path` for isolated filesystem operations, so they do not alter project fixtures. The suite covers calculator parsing and precedence, parentheses, file listing and reading, guarded file writing, and Python subprocess execution. Pytest is included in the development dependency group.
+The tests are in `tests/`. Filesystem-related tests use pytest's `tmp_path` fixture to avoid modifying project files.
 
 ## Project layout
 
 ```text
 .
-├── main.py                 # AI assistant CLI
 ├── calculator/
-│   ├── main.py             # Calculator CLI
+│   ├── main.py              # Calculator CLI
 │   └── pkg/
-│       ├── calculator.py   # Expression evaluation
-│       └── render.py       # JSON output formatting
-├── functions/              # Agent-callable tools
-├── tests/                  # Automated project tests
-├── pyproject.toml          # Project metadata and dependencies
-└── uv.lock                 # Locked dependency versions
+│       ├── calculator.py    # Expression parsing and evaluation
+│       └── render.py        # JSON result formatting
+├── functions/               # Agent-callable tools and dispatcher
+├── tests/                   # Automated pytest suite
+├── config.py                # Tool configuration
+├── main.py                  # AI agent CLI and model/tool loop
+├── prompts.py               # Agent system prompt
+├── pyproject.toml           # Project and dependency configuration
+└── uv.lock                  # Locked dependencies
 ```
