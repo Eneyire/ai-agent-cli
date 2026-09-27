@@ -2,7 +2,7 @@
 
 import unittest
 
-from pkg.calculator import Calculator
+from calculator.pkg.calculator import Calculator
 
 
 class TestCalculator(unittest.TestCase):

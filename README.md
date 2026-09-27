@@ -76,18 +76,17 @@ Multiplication and division take precedence over addition and subtraction. For e
 python main.py "2 * 3 - 8 / 2 + 5"
 ```
 
-Expressions must be space-separated. Invalid expressions and arithmetic errors are reported on the command line.
+Expressions use space-separated operators and support nested parentheses (for example, `"( 3 + 5 ) * 2"`). Invalid expressions and arithmetic errors are reported on the command line.
 
 ## Tests
 
-Run the calculator unit tests from its directory:
+Run the full test suite from the project root:
 
 ```bash
-cd calculator
-python -m unittest tests.py
+uv run python -m unittest discover -s tests -v
 ```
 
-The tests cover the four supported operators, operator precedence, nested expressions, empty input, invalid operators, and missing operands.
+Tests live in the root `tests/` directory and use temporary directories for filesystem operations, so they do not alter project fixtures. The suite covers calculator parsing and precedence, parentheses, file listing and reading, guarded file writing, and Python subprocess execution.
 
 ## Project layout
 
@@ -96,10 +95,11 @@ The tests cover the four supported operators, operator precedence, nested expres
 ├── main.py                 # AI assistant CLI
 ├── calculator/
 │   ├── main.py             # Calculator CLI
-│   ├── tests.py            # Calculator tests
 │   └── pkg/
 │       ├── calculator.py   # Expression evaluation
 │       └── render.py       # JSON output formatting
+├── functions/              # Agent-callable tools
+├── tests/                  # Automated project tests
 ├── pyproject.toml          # Project metadata and dependencies
 └── uv.lock                 # Locked dependency versions
 ```
