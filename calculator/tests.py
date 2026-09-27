@@ -33,6 +33,24 @@ class TestCalculator(unittest.TestCase):
         result = self.calculator.evaluate("2 * 3 - 8 / 2 + 5")
         self.assertEqual(result, 7)
 
+    def test_parentheses_override_precedence(self) -> None:
+        result = self.calculator.evaluate("( 3 + 7 ) * 2")
+        self.assertEqual(result, 20)
+
+    def test_nested_parentheses(self) -> None:
+        result = self.calculator.evaluate("( 3 + ( 7 * 2 ) )")
+        self.assertEqual(result, 17)
+
+    def test_parentheses_attached_to_values(self) -> None:
+        result = self.calculator.evaluate("(3 + 7) * 2")
+        self.assertEqual(result, 20)
+
+    def test_unmatched_parentheses(self) -> None:
+        with self.assertRaises(ValueError):
+            self.calculator.evaluate("( 3 + 7")
+        with self.assertRaises(ValueError):
+            self.calculator.evaluate("3 + 7 )")
+
     def test_empty_expression(self) -> None:
         result = self.calculator.evaluate("")
         self.assertIsNone(result)
