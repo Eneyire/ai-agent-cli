@@ -21,19 +21,19 @@ The project highlights practical agent engineering patterns: model-driven tool s
 
 ## Setup
 
-Install the project and development dependencies:
+Run these commands from the repository root (the directory containing `pyproject.toml`):
 
 ```bash
 uv sync
 ```
 
-Create a `.env` file in the project root and add your OpenRouter API key:
+This installs the application and its development dependencies, including pytest. To enable the AI agent, create a file named `.env` in the same directory as `main.py` and add your OpenRouter API key:
 
 ```env
 OPENROUTER_API_KEY=your-api-key
 ```
 
-The CLI loads this variable from `.env` at startup. Keep API keys private and do not commit them.
+Replace `your-api-key` with a key from your OpenRouter account. The CLI loads it from `.env` at startup. Keep the key private; `.env` is ignored by Git and should not be committed.
 
 ## Run the agent
 
@@ -60,7 +60,7 @@ The agent uses the OpenAI-compatible OpenRouter API with the `openrouter/free` m
 | `write_file`       | Create or overwrite a file.                                              |
 | `run_python_file`  | Run a Python file and capture its output and exit status.                |
 
-The agent supplies `calculator/` as the tools' working directory. Path validation limits the requested target paths to that workspace. **This is not an operating-system sandbox:** Python scripts run as subprocesses with the permissions of the current user, and code inside a script may access resources beyond the selected working directory. Only run the agent in a trusted environment and review code before executing it.
+The tools use `./calculator` as their working directory, relative to the process's current directory, so launch the agent from the repository root. They check requested paths against that workspace and reject ordinary paths that traverse outside it. These checks do not resolve symlinks, so a symlink in the workspace may point elsewhere. **This is not an operating-system sandbox:** Python scripts run as subprocesses with the permissions of the current user and may access resources beyond the workspace. Only run the agent in a trusted environment and review code before executing it.
 
 ## Calculator
 
@@ -83,7 +83,7 @@ The calculator supports addition, subtraction, multiplication, division, operato
 
 ## Tests
 
-Run the complete test suite from the project root:
+From the repository root, run the complete test suite:
 
 ```bash
 uv run pytest
