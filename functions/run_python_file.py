@@ -14,7 +14,13 @@ schema_run_python_file = {
                     "type": "string",
                     "description": "Path to the Python file to run, relative to the working directory",
                 },
+                "args": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Optional command-line arguments to pass to the Python file",
+                },
             },
+            "required": ["file_path"],
         },
     },
 }
