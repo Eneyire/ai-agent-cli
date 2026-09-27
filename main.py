@@ -1,8 +1,11 @@
 import argparse
 import os
+import sys
+from typing import cast
 
 from dotenv import load_dotenv
 from openai import OpenAI
+from openai.types.chat import ChatCompletionToolParam
 
 from functions.call_function import available_functions, call_function
 from prompts import system_prompt
@@ -32,29 +35,33 @@ def main() -> None:
         {"role": "user", "content": args.user_prompt},
     ]
 
-    response = client.chat.completions.create(
-        model="openrouter/free",
-        messages=messages,
-        temperature=0,
-        tools=available_functions,
-    )
+    for _ in range(20):
+        response = client.chat.completions.create(
+            model="openrouter/free",
+            messages=messages,
+            temperature=0,
+            tools=cast(list[ChatCompletionToolParam], available_functions),
+        )
 
-    if response.usage is None:
-        raise RuntimeError("Failed to get usage information from the API")
+        if response.usage is None:
+            raise RuntimeError("Failed to get usage information from the API")
 
-    if args.verbose:
-        print(f"User prompt: {args.user_prompt}")
-        print(f"Prompt tokens: {response.usage.prompt_tokens}")
-        print(f"Response tokens: {response.usage.completion_tokens}")
-        print(f"Total tokens: {response.usage.total_tokens}")
-        print(f"Response: \n{response.choices[0].message.content}\n")
-    else:
-        print(f"Response: \n{response.choices[0].message.content}\n")
+        message = response.choices[0].message
+        messages.append(message)
 
-    message = response.choices[0].message
+        if args.verbose:
+            print(f"User prompt: {args.user_prompt}")
+            print(f"Prompt tokens: {response.usage.prompt_tokens}")
+            print(f"Response tokens: {response.usage.completion_tokens}")
+            print(f"Total tokens: {response.usage.total_tokens}")
 
-    if message.tool_calls:
+        if not message.tool_calls:
+            print(f"Response: \n{message.content}\n")
+            return
+
         for tool_call in message.tool_calls:
+            if tool_call.type != "function":
+                raise RuntimeError(f"Unsupported tool call type: {tool_call.type}")
             result_message = call_function(tool_call, args.verbose)
             if not result_message.get("content"):
                 raise RuntimeError(
@@ -62,9 +69,12 @@ def main() -> None:
                 )
             if args.verbose:
                 print(f"-> {result_message['content']}")
+            messages.append(result_message)
 
-    if message.tool_calls is None:
-        print(f"There were no function calls.\nContent: \n{message.content}\n")
+    print(
+        "Error: Maximum number of model iterations (20) reached without a final response."
+    )
+    sys.exit(1)
 
 
 if __name__ == "__main__":
