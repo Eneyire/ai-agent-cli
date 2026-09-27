@@ -1,39 +1,34 @@
-import tempfile
-import unittest
 from pathlib import Path
 
 from functions.get_files_info import get_files_info
 
 
-class TestGetFilesInfo(unittest.TestCase):
-    def setUp(self) -> None:
-        self.temp_dir = tempfile.TemporaryDirectory()
-        self.working_directory = Path(self.temp_dir.name)
-        (self.working_directory / "sample.txt").write_text("hello", encoding="utf-8")
-        (self.working_directory / "subdir").mkdir()
+def test_lists_files_and_directories(tmp_path: Path) -> None:
+    (tmp_path / "sample.txt").write_text("hello", encoding="utf-8")
+    (tmp_path / "subdir").mkdir()
 
-    def tearDown(self) -> None:
-        self.temp_dir.cleanup()
+    result = get_files_info(str(tmp_path))
 
-    def test_lists_files_and_directories(self) -> None:
-        result = get_files_info(str(self.working_directory))
-
-        self.assertIn("- sample.txt: file_size=5 bytes, is_dir=False", result)
-        self.assertIn("- subdir: file_size=", result)
-        self.assertIn("is_dir=True", result)
-
-    def test_lists_requested_subdirectory(self) -> None:
-        result = get_files_info(str(self.working_directory), "subdir")
-        self.assertEqual(result, "")
-
-    def test_rejects_path_outside_working_directory(self) -> None:
-        result = get_files_info(str(self.working_directory), "../")
-        self.assertTrue(result.startswith('Error: Cannot list "../"'))
-
-    def test_rejects_file_instead_of_directory(self) -> None:
-        result = get_files_info(str(self.working_directory), "sample.txt")
-        self.assertEqual(result, 'Error: "sample.txt" is not a directory')
+    assert "- sample.txt: file_size=5 bytes, is_dir=False" in result
+    assert "- subdir: file_size=" in result
+    assert "is_dir=True" in result
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_lists_requested_empty_subdirectory(tmp_path: Path) -> None:
+    (tmp_path / "subdir").mkdir()
+
+    assert get_files_info(str(tmp_path), "subdir") == ""
+
+
+def test_rejects_path_outside_working_directory(tmp_path: Path) -> None:
+    result = get_files_info(str(tmp_path), "../")
+
+    assert result.startswith('Error: Cannot list "../"')
+
+
+def test_rejects_file_instead_of_directory(tmp_path: Path) -> None:
+    (tmp_path / "sample.txt").write_text("hello", encoding="utf-8")
+
+    assert get_files_info(str(tmp_path), "sample.txt") == (
+        'Error: "sample.txt" is not a directory'
+    )

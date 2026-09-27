@@ -80,13 +80,13 @@ Expressions use space-separated operators and support nested parentheses (for ex
 
 ## Tests
 
-Run the full test suite from the project root:
+Run the full pytest suite from the project root:
 
 ```bash
-uv run python -m unittest discover -s tests -v
+uv run pytest
 ```
 
-Tests live in the root `tests/` directory and use temporary directories for filesystem operations, so they do not alter project fixtures. The suite covers calculator parsing and precedence, parentheses, file listing and reading, guarded file writing, and Python subprocess execution.
+Tests live in the root `tests/` directory and use pytest fixtures such as `tmp_path` for isolated filesystem operations, so they do not alter project fixtures. The suite covers calculator parsing and precedence, parentheses, file listing and reading, guarded file writing, and Python subprocess execution. Pytest is included in the development dependency group.
 
 ## Project layout
 

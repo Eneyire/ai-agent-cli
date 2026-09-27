@@ -1,68 +1,48 @@
-# calculator/tests.py
-
-import unittest
+import pytest
 
 from calculator.pkg.calculator import Calculator
 
 
-class TestCalculator(unittest.TestCase):
-    def setUp(self) -> None:
-        self.calculator = Calculator()
-
-    def test_addition(self) -> None:
-        result = self.calculator.evaluate("3 + 5")
-        self.assertEqual(result, 8)
-
-    def test_subtraction(self) -> None:
-        result = self.calculator.evaluate("10 - 4")
-        self.assertEqual(result, 6)
-
-    def test_multiplication(self) -> None:
-        result = self.calculator.evaluate("3 * 4")
-        self.assertEqual(result, 12)
-
-    def test_division(self) -> None:
-        result = self.calculator.evaluate("10 / 2")
-        self.assertEqual(result, 5)
-
-    def test_nested_expression(self) -> None:
-        result = self.calculator.evaluate("3 * 4 + 5")
-        self.assertEqual(result, 17)
-
-    def test_complex_expression(self) -> None:
-        result = self.calculator.evaluate("2 * 3 - 8 / 2 + 5")
-        self.assertEqual(result, 7)
-
-    def test_parentheses_override_precedence(self) -> None:
-        result = self.calculator.evaluate("( 3 + 7 ) * 2")
-        self.assertEqual(result, 20)
-
-    def test_nested_parentheses(self) -> None:
-        result = self.calculator.evaluate("( 3 + ( 7 * 2 ) )")
-        self.assertEqual(result, 17)
-
-    def test_parentheses_attached_to_values(self) -> None:
-        result = self.calculator.evaluate("(3 + 7) * 2")
-        self.assertEqual(result, 20)
-
-    def test_unmatched_parentheses(self) -> None:
-        with self.assertRaises(ValueError):
-            self.calculator.evaluate("( 3 + 7")
-        with self.assertRaises(ValueError):
-            self.calculator.evaluate("3 + 7 )")
-
-    def test_empty_expression(self) -> None:
-        result = self.calculator.evaluate("")
-        self.assertIsNone(result)
-
-    def test_invalid_operator(self) -> None:
-        with self.assertRaises(ValueError):
-            self.calculator.evaluate("$ 3 5")
-
-    def test_not_enough_operands(self) -> None:
-        with self.assertRaises(ValueError):
-            self.calculator.evaluate("+ 3")
+@pytest.fixture
+def calculator() -> Calculator:
+    return Calculator()
 
 
-if __name__ == "__main__":
-    unittest.main()
+@pytest.mark.parametrize(
+    ("expression", "expected"),
+    [
+        ("3 + 5", 8),
+        ("10 - 4", 6),
+        ("3 * 4", 12),
+        ("10 / 2", 5),
+        ("3 * 4 + 5", 17),
+        ("2 * 3 - 8 / 2 + 5", 7),
+        ("( 3 + 7 ) * 2", 20),
+        ("( 3 + ( 7 * 2 ) )", 17),
+        ("(3 + 7) * 2", 20),
+    ],
+)
+def test_evaluate_expression(
+    calculator: Calculator, expression: str, expected: float
+) -> None:
+    assert calculator.evaluate(expression) == expected
+
+
+def test_empty_expression_returns_none(calculator: Calculator) -> None:
+    assert calculator.evaluate("") is None
+
+
+@pytest.mark.parametrize("expression", ["( 3 + 7", "3 + 7 )"])
+def test_unmatched_parentheses_raise_value_error(
+    calculator: Calculator, expression: str
+) -> None:
+    with pytest.raises(ValueError):
+        calculator.evaluate(expression)
+
+
+@pytest.mark.parametrize("expression", ["$ 3 5", "+ 3"])
+def test_invalid_expressions_raise_value_error(
+    calculator: Calculator, expression: str
+) -> None:
+    with pytest.raises(ValueError):
+        calculator.evaluate(expression)
