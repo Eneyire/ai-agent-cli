@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 
 from dotenv import load_dotenv
@@ -47,9 +48,19 @@ def main() -> None:
         print(f"Prompt tokens: {response.usage.prompt_tokens}")
         print(f"Response tokens: {response.usage.completion_tokens}")
         print(f"Total tokens: {response.usage.total_tokens}")
-        print(f"Response: \n{response.choices[0].message.content}")
+        print(f"Response: \n{response.choices[0].message.content}\n")
     else:
-        print(f"Response: \n{response.choices[0].message.content}")
+        print(f"Response: \n{response.choices[0].message.content}\n")
+
+    message = response.choices[0].message
+
+    if message.tool_calls:
+        for tool_call in message.tool_calls:
+            function_args = json.loads(tool_call.function.arguments or "{}")
+            print(f"Calling function: {tool_call.function.name}({function_args})")
+
+    if message.tool_calls is None:
+        print(f"There were no function calls.\nContent: \n{message.content}\n")
 
 
 if __name__ == "__main__":
